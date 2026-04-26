@@ -1,0 +1,19 @@
+
+> ccs-lms@0.1.0 dev
+> next dev
+
+⚠ Port 3000 is in use by process 3180, using available port 3001 instead.
+▲ Next.js 16.2.4 (Turbopack)
+- Local:         http://localhost:3001
+- Network:       http://192.168.31.114:3001
+- Environments: .env.local
+✓ Ready in 3.7s
+⨯ Another next dev server is already running.
+
+- Local:        http://localhost:3000
+- PID:          3180
+- Dir:          C:\Users\markm\OneDrive\Documents\ccs-lms
+- Log:          .next\dev\logs\next-development.log
+
+Run taskkill /PID 3180 /F to stop it.
+[?25h
