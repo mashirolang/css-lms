@@ -53,6 +53,7 @@ interface CourseOption {
   course_id: string;
   year_level: number;
   section: string;
+  courses?: { name: string } | { name: string }[];
 }
 
 export default function StudentSchedulePage() {
@@ -175,7 +176,10 @@ export default function StudentSchedulePage() {
     return null;
   };
 
-  const uniqueSections = Array.from(new Set(courses.map(c => `${c.courses?.name || c.course_id}-${c.year_level}${c.section}`))).sort();
+  const uniqueSections = Array.from(new Set(courses.map(c => {
+    const course = Array.isArray(c.courses) ? c.courses[0] : c.courses;
+    return `${course?.name || c.course_id}-${c.year_level}${c.section}`;
+  }))).sort();
 
   return (
     <div className="space-y-6">

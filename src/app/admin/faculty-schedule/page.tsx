@@ -62,6 +62,7 @@ interface SubjectItem {
   year_level: number;
   section: string;
   faculty_id?: string;
+  courses?: { name: string } | { name: string }[];
 }
 
 export default function FacultyScheduleManager() {
