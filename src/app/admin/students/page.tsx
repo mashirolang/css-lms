@@ -7,7 +7,7 @@ import {
   ChevronRight, MoreVertical, Loader2, CheckCircle2,
   Clock, XCircle, GraduationCap, Eye, AlertCircle, Info, Settings, Trash2
 } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -26,7 +26,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { createClient } from "@/lib/supabase/client";
-import { getInitials, cn } from "@/lib/utils";
+import { getInitials } from "@/lib/utils";
 import { toast } from "sonner";
 
 // Helper for generating student numbers
@@ -95,7 +95,16 @@ export default function AdminStudentsPage() {
 
       if (error) throw error;
 
-      const formatted: StudentRow[] = (data || []).map((s: any) => ({
+      const formatted: StudentRow[] = (data as any || []).map((s: { 
+        id: string; 
+        status: string; 
+        year_level: number; 
+        section: string; 
+        student_number: string | null; 
+        selection_submitted: boolean; 
+        profiles: { first_name: string; last_name: string; email: string; created_at: string }; 
+        courses: { name: string; code: string } | null; 
+      }) => ({
         id: s.id,
         name: `${s.profiles.first_name} ${s.profiles.last_name}`,
         email: s.profiles.email,
@@ -109,7 +118,7 @@ export default function AdminStudentsPage() {
       }));
 
       setStudents(formatted);
-    } catch (err: unknown) {
+    } catch {
       toast.error("Failed to load students");
     } finally {
       setLoading(false);
@@ -180,8 +189,8 @@ export default function AdminStudentsPage() {
         .in("status", ["pending", "confirmed"]);
 
       if (error) throw error;
-      setPendingSubjects((data || []).map((e: { status: string; subjects: any }) => ({
-        ...(Array.isArray(e.subjects) ? e.subjects[0] : e.subjects),
+      setPendingSubjects((data || []).map((e: { status: string; subjects: unknown }) => ({
+        ...(Array.isArray(e.subjects) ? e.subjects[0] : e.subjects as SelectedSubject),
         status: e.status
       })));
     } catch {
