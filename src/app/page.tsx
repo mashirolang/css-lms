@@ -25,7 +25,7 @@ const ROLES = [
   {
     label: "Student",
     description: "View subjects, submit activities, and check grades",
-    href: "/student/login",
+    href: "/login",
     icon: Users,
     gradient: "from-blue-600 to-blue-900",
     iconBg: "bg-blue-500",

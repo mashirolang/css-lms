@@ -140,13 +140,21 @@ export default function FacultyPage() {
 
   const handleToggleActive = async (id: string, currentStatus: boolean) => {
     try {
-      const { error } = await supabase
-        .from("faculty")
-        .update({ is_active: !currentStatus })
-        .eq("id", id);
-
-      if (error) throw error;
-
+      if (!currentStatus) {
+        // Use RPC for activation to trigger notifications
+        const { error } = await supabase.rpc("activate_faculty", {
+          p_faculty_id: id
+        });
+        if (error) throw error;
+      } else {
+        // Regular update for deactivation
+        const { error } = await supabase
+          .from("faculty")
+          .update({ is_active: false })
+          .eq("id", id);
+        if (error) throw error;
+      }
+      
       toast.success(`Faculty ${!currentStatus ? 'activated' : 'deactivated'} successfully`);
       fetchFaculty();
     } catch (err: unknown) {
@@ -187,7 +195,7 @@ export default function FacultyPage() {
           </div>
         ) : (
           filtered.map((fac) => (
-            <Card key={fac.id} className={`hover:shadow-md transition-all ${!fac.isActive ? "opacity-60" : ""}`}>
+            <Card key={fac.id} className={`hover:shadow-md transition-all border-slate-200 ${!fac.isActive ? "bg-amber-50/30 ring-1 ring-amber-100" : ""}`}>
               <CardContent className="p-5">
                 <div className="flex items-start gap-3 mb-4">
                   <Avatar className="h-11 w-11">
@@ -195,10 +203,12 @@ export default function FacultyPage() {
                   </Avatar>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-2">
-                      <p className="font-semibold text-slate-800 leading-tight">{fac.name}</p>
-                      <Badge variant={fac.isActive ? "enrolled" : "inactive"} className="shrink-0">
-                        {fac.isActive ? "Active" : "Inactive"}
-                      </Badge>
+                      <p className="font-bold text-slate-900 leading-tight truncate">{fac.name}</p>
+                      {!fac.isActive ? (
+                        <Badge className="bg-amber-100 text-amber-700 border-amber-200 font-black uppercase text-[8px] animate-pulse">Pending</Badge>
+                      ) : (
+                        <Badge className="bg-emerald-50 text-emerald-700 border-emerald-100 font-bold uppercase text-[8px]">Active</Badge>
+                      )}
                     </div>
                     <p className="text-xs text-slate-500 mt-0.5">{fac.department}</p>
                   </div>

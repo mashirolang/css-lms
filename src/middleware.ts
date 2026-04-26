@@ -4,6 +4,7 @@ const PUBLIC_PATHS = [
   "/",
   "/admin/login",
   "/faculty/login",
+  "/faculty/register",
   "/student/login",
   "/login",
   "/register",

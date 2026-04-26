@@ -173,8 +173,15 @@ begin
     pr.last_name,
     pr.force_password_change
   from public.profiles pr
+  left join public.faculty f on f.id = pr.id
+  left join public.students s on s.id = pr.id
   where pr.email         = lower(trim(p_email))
     and pr.role          = p_role
-    and pr.password_hash = crypt(p_password, pr.password_hash);
+    and pr.password_hash = crypt(p_password, pr.password_hash)
+    and (
+      pr.role = 'admin'
+      or (pr.role = 'faculty' and f.is_active = true)
+      or (pr.role = 'student' and s.status in ('active', 'enrolled', 'accepted', 'pending'))
+    );
 end;
 $$;
