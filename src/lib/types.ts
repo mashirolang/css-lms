@@ -106,3 +106,80 @@ export interface AttendanceRecord {
   date: string;
   present: boolean;
 }
+
+// ─── Student Profiling ────────────────────────────────────────────────────
+
+export interface ExtendedProfile {
+  student_id: string;
+  phone?: string;
+  address?: string;
+  birth_date?: string;
+  gender?: 'male' | 'female' | 'non_binary' | 'prefer_not_to_say';
+  guardian_name?: string;
+  guardian_phone?: string;
+  guardian_relation?: string;
+  updated_at?: string;
+}
+
+export type SkillCategory = 'programming' | 'hardware' | 'software' | 'other';
+export type ProficiencyLevel = 'beginner' | 'intermediate' | 'advanced' | 'expert';
+
+export interface StudentSkill {
+  id: string;
+  student_id: string;
+  category: SkillCategory;
+  name: string;
+  proficiency: ProficiencyLevel;
+  notes?: string;
+  created_at: string;
+}
+
+export type CoCurricularType = 'club' | 'competition' | 'org_role' | 'volunteer' | 'other';
+
+export interface CoCurricular {
+  id: string;
+  student_id: string;
+  type: CoCurricularType;
+  organization: string;
+  role: string;
+  description?: string;
+  start_date: string;
+  end_date?: string;
+  created_at: string;
+}
+
+export interface SubjectGrade {
+  subject_id: string;
+  subject_name: string;
+  subject_code: string;
+  units: number;
+  weighted_avg: number;
+  grade_point: number | null;
+  letter_grade: string;
+  descriptor: string;
+  has_grades: boolean;
+}
+
+export interface GPASummary {
+  gpa: number | null;
+  total_units: number;
+  graded_units: number;
+  subjects_count: number;
+}
+
+export interface CollegeStats {
+  total_students: number;
+  enrolled_students: number;
+  avg_gpa: number | null;
+  students_by_year: { year_level: number; count: number }[];
+}
+
+export interface SkillDistribution {
+  category: string;
+  count: number;
+}
+
+export interface SubjectPerformance {
+  subject_code: string;
+  avg_weighted_score: number;
+}

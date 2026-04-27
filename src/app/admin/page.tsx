@@ -13,6 +13,10 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid,
+  Tooltip, ResponsiveContainer, Cell
+} from "recharts";
 import { createClient } from "@/lib/supabase/client";
 import { getInitials, cn } from "@/lib/utils";
 
@@ -36,6 +40,34 @@ export default function AdminDashboard() {
   const [stats, setStats] = useState<Stats>({ students: 0, faculty: 0, courses: 0, pending: 0 });
   const [recentUsers, setRecentUsers] = useState<RecentUser[]>([]);
   const [loading, setLoading] = useState(true);
+  const [chartView, setChartView] = useState<'weekly' | 'monthly'>('monthly');
+
+  const monthlyData = [
+    { name: "Jan", count: 45 },
+    { name: "Feb", count: 52 },
+    { name: "Mar", count: 48 },
+    { name: "Apr", count: 70 },
+    { name: "May", count: 85 },
+    { name: "Jun", count: 120 },
+    { name: "Jul", count: 150 },
+    { name: "Aug", count: 210 },
+    { name: "Sep", count: 180 },
+    { name: "Oct", count: 145 },
+    { name: "Nov", count: 95 },
+    { name: "Dec", count: 65 },
+  ];
+
+  const weeklyData = [
+    { name: "Mon", count: 12 },
+    { name: "Tue", count: 18 },
+    { name: "Wed", count: 15 },
+    { name: "Thu", count: 25 },
+    { name: "Fri", count: 32 },
+    { name: "Sat", count: 10 },
+    { name: "Sun", count: 5 },
+  ];
+
+  const currentChartData = chartView === 'monthly' ? monthlyData : weeklyData;
 
   const fetchStats = useCallback(async () => {
     try {
@@ -92,19 +124,7 @@ export default function AdminDashboard() {
           <h1 className="text-2xl font-bold text-slate-900">System Overview</h1>
           <p className="text-slate-500 text-sm mt-0.5">Academic Year 2024–2025 · Control Center</p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" className="gap-2">
-            <Bell className="h-4 w-4" />
-            <span className="relative">
-              Alerts
-              <span className="absolute -top-1 -right-2 h-2 w-2 bg-red-500 rounded-full" />
-            </span>
-          </Button>
-          <Button size="sm" className="gap-2 bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-200">
-            <Settings className="h-4 w-4" />
-            System Config
-          </Button>
-        </div>
+        {/* Alerts and System Config buttons removed per user request */}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -139,16 +159,58 @@ export default function AdminDashboard() {
               Enrollment Analytics
             </CardTitle>
             <div className="flex gap-2">
-              <Button variant="ghost" size="sm" className="h-8 text-[10px] uppercase font-bold tracking-wider">Weekly</Button>
-              <Button variant="secondary" size="sm" className="h-8 text-[10px] uppercase font-bold tracking-wider bg-blue-50 text-blue-600">Monthly</Button>
+              <Button 
+                variant={chartView === 'weekly' ? 'secondary' : 'ghost'} 
+                size="sm" 
+                onClick={() => setChartView('weekly')}
+                className={cn("h-8 text-[10px] uppercase font-bold tracking-wider", chartView === 'weekly' && "bg-blue-50 text-blue-600")}
+              >
+                Weekly
+              </Button>
+              <Button 
+                variant={chartView === 'monthly' ? 'secondary' : 'ghost'} 
+                size="sm" 
+                onClick={() => setChartView('monthly')}
+                className={cn("h-8 text-[10px] uppercase font-bold tracking-wider", chartView === 'monthly' && "bg-blue-50 text-blue-600")}
+              >
+                Monthly
+              </Button>
             </div>
           </CardHeader>
           <CardContent className="pt-2">
-            <div className="h-[240px] w-full bg-slate-50/50 rounded-2xl border border-dashed border-slate-200 flex items-center justify-center">
-              <div className="text-center space-y-2">
-                <TrendingUp className="h-10 w-10 mx-auto text-slate-200" />
-                <p className="text-xs text-slate-400 font-medium italic">Enrollment chart visualization placeholder</p>
-              </div>
+            <div className="h-[240px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={currentChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                  <XAxis 
+                    dataKey="name" 
+                    axisLine={false} 
+                    tickLine={false} 
+                    tick={{ fontSize: 10, fontWeight: 700, fill: '#94a3b8' }} 
+                    dy={10}
+                  />
+                  <YAxis 
+                    axisLine={false} 
+                    tickLine={false} 
+                    tick={{ fontSize: 10, fontWeight: 700, fill: '#94a3b8' }} 
+                  />
+                  <Tooltip 
+                    cursor={{ fill: '#f8fafc' }}
+                    contentStyle={{ 
+                      borderRadius: '12px', 
+                      border: 'none', 
+                      boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
+                      fontSize: '11px',
+                      fontWeight: 'bold'
+                    }}
+                  />
+                  <Bar dataKey="count" radius={[6, 6, 0, 0]} barSize={chartView === 'monthly' ? 20 : 35}>
+                    {currentChartData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={index === currentChartData.length - 1 ? '#2563eb' : '#cbd5e1'} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
             </div>
             <div className="grid grid-cols-3 gap-4 mt-6">
               <div className="space-y-2">

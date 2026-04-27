@@ -92,6 +92,10 @@ export default function ClassDetailPage() {
 
   const [postModal, setPostModal] = useState(false);
   const [postLoading, setPostLoading] = useState(false);
+  
+  // Pagination for Roster
+  const [rosterPage, setRosterPage] = useState(1);
+  const rosterItemsPerPage = 10;
 
   const fetchClassData = useCallback(async () => {
     try {
@@ -110,7 +114,7 @@ export default function ClassDetailPage() {
       const slots = subject.schedule_slots || [];
       const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
       const schedStr = slots.length > 0 
-        ? `${slots.map((sl: any) => days[sl.day_of_week]).join("/")} ${slots[0].start_time.slice(0,5)}–${slots[0].end_time.slice(0,5)}`
+        ? `${slots.map((sl: { day_of_week: number }) => days[sl.day_of_week]).join("/")} ${slots[0].start_time.slice(0,5)}–${slots[0].end_time.slice(0,5)}`
         : "TBA";
 
       const courseName = subject.courses?.name || subject.course_id || "Unknown";
@@ -129,7 +133,16 @@ export default function ClassDetailPage() {
         .select(`student_id, students (profiles (id, first_name, last_name))`)
         .eq("subject_id", id);
 
-      const studentList: Student[] = (enrolled || []).map((e: any) => ({
+      const studentList: Student[] = (enrolled as unknown as Array<{
+        student_id: string;
+        students: {
+          profiles: {
+            id: string;
+            first_name: string;
+            last_name: string;
+          }
+        }
+      }> || []).map((e) => ({
         id: e.student_id,
         name: `${e.students.profiles.first_name} ${e.students.profiles.last_name}`,
         status: "present" as const 
@@ -158,6 +171,11 @@ export default function ClassDetailPage() {
     }
   }, [id, supabase]);
 
+  // Roster Pagination Logic
+  const rosterTotalPages = Math.ceil(students.length / rosterItemsPerPage);
+  const rosterStartIndex = (rosterPage - 1) * rosterItemsPerPage;
+  const paginatedRoster = students.slice(rosterStartIndex, rosterStartIndex + rosterItemsPerPage);
+
   const fetchSubmissions = async (actId: string) => {
     try {
       const { data, error } = await supabase
@@ -185,6 +203,7 @@ export default function ClassDetailPage() {
   };
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchClassData();
   }, [fetchClassData]);
 
@@ -347,7 +366,7 @@ export default function ClassDetailPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {students.map((student) => (
+                  {paginatedRoster.map((student) => (
                     <tr key={student.id} className="hover:bg-slate-50/30 transition-colors">
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
@@ -366,6 +385,63 @@ export default function ClassDetailPage() {
                   ))}
                 </tbody>
               </table>
+              {rosterTotalPages > 1 && (
+                <div className="p-4 border-t border-slate-50 bg-slate-50/20 flex items-center justify-between">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                    Page {rosterPage} of {rosterTotalPages}
+                  </p>
+                  <div className="flex items-center gap-1">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="h-7 text-[9px] font-bold uppercase tracking-widest px-3 border-slate-200"
+                      disabled={rosterPage === 1}
+                      onClick={() => setRosterPage(p => p - 1)}
+                    >
+                      Prev
+                    </Button>
+                    {(() => {
+                      const delta = 1;
+                      const range = [];
+                      for (let i = Math.max(2, rosterPage - delta); i <= Math.min(rosterTotalPages - 1, rosterPage + delta); i++) {
+                        range.push(i);
+                      }
+
+                      if (rosterPage > 1 + delta + 1) range.unshift("...");
+                      range.unshift(1);
+                      if (rosterPage < rosterTotalPages - delta - 1) range.push("...");
+                      if (rosterTotalPages > 1) range.push(rosterTotalPages);
+
+                      return range.map((p, i) => (
+                        <button
+                          key={i}
+                          disabled={p === "..."}
+                          onClick={() => typeof p === "number" && setRosterPage(p)}
+                          className={cn(
+                            "h-7 min-w-[28px] px-1.5 rounded-lg text-[9px] font-black transition-all",
+                            rosterPage === p 
+                              ? "bg-blue-600 text-white shadow-md shadow-blue-100" 
+                              : p === "..."
+                                ? "bg-transparent text-slate-300 cursor-default"
+                                : "bg-white text-slate-400 hover:bg-slate-100 border border-slate-100"
+                          )}
+                        >
+                          {p}
+                        </button>
+                      ));
+                    })()}
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="h-7 text-[9px] font-bold uppercase tracking-widest px-3 border-slate-200"
+                      disabled={rosterPage === rosterTotalPages}
+                      onClick={() => setRosterPage(p => p + 1)}
+                    >
+                      Next
+                    </Button>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

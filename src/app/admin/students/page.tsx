@@ -26,7 +26,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { createClient } from "@/lib/supabase/client";
-import { getInitials } from "@/lib/utils";
+import { getInitials, cn } from "@/lib/utils";
 import { toast } from "sonner";
 
 // Helper for generating student numbers
@@ -69,6 +69,10 @@ export default function AdminStudentsPage() {
   const [reviewLoading, setReviewLoading] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [assignedStudentNumber, setAssignedStudentNumber] = useState("");
+  
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 8;
 
   const fetchStudents = useCallback(async () => {
     try {
@@ -94,17 +98,19 @@ export default function AdminStudentsPage() {
         `);
 
       if (error) throw error;
+      
+      type SupabaseStudent = {
+        id: string;
+        status: string;
+        year_level: number;
+        section: string;
+        student_number: string | null;
+        selection_submitted: boolean;
+        profiles: { first_name: string; last_name: string; email: string; created_at: string };
+        courses: { name: string; code: string } | null;
+      };
 
-      const formatted: StudentRow[] = (data as any || []).map((s: { 
-        id: string; 
-        status: string; 
-        year_level: number; 
-        section: string; 
-        student_number: string | null; 
-        selection_submitted: boolean; 
-        profiles: { first_name: string; last_name: string; email: string; created_at: string }; 
-        courses: { name: string; code: string } | null; 
-      }) => ({
+      const formatted: StudentRow[] = (data as unknown as SupabaseStudent[] || []).map((s) => ({
         id: s.id,
         name: `${s.profiles.first_name} ${s.profiles.last_name}`,
         email: s.profiles.email,
@@ -126,6 +132,7 @@ export default function AdminStudentsPage() {
   }, [supabase]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchStudents();
   }, [fetchStudents]);
 
@@ -247,6 +254,24 @@ export default function AdminStudentsPage() {
     (s.studentNumber || "").toLowerCase().includes(search.toLowerCase())
   );
 
+  // Statistics
+  const stats = {
+    total: students.length,
+    enrolled: students.filter(s => s.status === 'enrolled').length,
+    pending: students.filter(s => s.status === 'pending' || s.selectionSubmitted).length,
+    inactive: students.filter(s => s.status === 'inactive').length
+  };
+
+  // Pagination Logic
+  const totalPages = Math.ceil(filtered.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedStudents = filtered.slice(startIndex, startIndex + itemsPerPage);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setCurrentPage(1);
+  }, [search]);
+
   const getStatusBadge = (status: string, selectionSubmitted: boolean) => {
     if (selectionSubmitted && status !== 'enrolled') {
       return <Badge className="bg-amber-500 text-white border-amber-600 font-black uppercase text-[9px] shadow-sm animate-pulse">Awaiting Review</Badge>;
@@ -267,10 +292,26 @@ export default function AdminStudentsPage() {
           <h1 className="text-2xl font-black text-slate-900 tracking-tight">Student Directory</h1>
           <p className="text-slate-500 text-sm mt-0.5 font-medium">Manage records and enrollment status for all students.</p>
         </div>
-        <Button className="gap-2 bg-blue-600 hover:bg-blue-700 shadow-xl shadow-blue-200 font-black">
-          <UserPlus className="h-4 w-4" />
-          Add Student
-        </Button>
+        {/* Add Student button removed per user request */}
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {[
+          { label: "Total Students", value: stats.total, color: "text-blue-600", bg: "bg-blue-50", icon: Users },
+          { label: "Enrolled", value: stats.enrolled, color: "text-emerald-600", bg: "bg-emerald-50", icon: GraduationCap },
+          { label: "Pending Review", value: stats.pending, color: "text-amber-600", bg: "bg-amber-50", icon: Clock },
+          { label: "Inactive", value: stats.inactive, color: "text-rose-600", bg: "bg-rose-50", icon: XCircle },
+        ].map((stat, i) => (
+          <Card key={i} className="p-4 border-slate-100 shadow-sm flex items-center gap-4 group hover:shadow-md transition-all">
+            <div className={cn("h-12 w-12 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110", stat.bg)}>
+              <stat.icon className={cn("h-6 w-6", stat.color)} />
+            </div>
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">{stat.label}</p>
+              <p className="text-xl font-black text-slate-900">{stat.value}</p>
+            </div>
+          </Card>
+        ))}
       </div>
 
       <div className="flex flex-col sm:flex-row gap-3">
@@ -318,7 +359,7 @@ export default function AdminStudentsPage() {
                   </td>
                 </tr>
               ) : (
-                filtered.map((student) => (
+                paginatedStudents.map((student) => (
                   <tr key={student.id} className="hover:bg-slate-50/50 transition-colors group">
                     <td className="py-4 px-6">
                       <div className="flex items-center gap-3">
@@ -376,8 +417,10 @@ export default function AdminStudentsPage() {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className="w-56 rounded-xl shadow-2xl border-slate-100">
                             <DropdownMenuLabel className="text-[10px] uppercase font-black text-slate-400 p-3">Management</DropdownMenuLabel>
-                            <DropdownMenuItem className="gap-2 p-3 font-bold cursor-pointer">
-                              <GraduationCap className="h-4 w-4 text-blue-600" /> View Academic Profile
+                            <DropdownMenuItem asChild>
+                              <Link href={`/admin/students/${student.id}`} className="gap-2 p-3 font-bold cursor-pointer">
+                                <GraduationCap className="h-4 w-4 text-blue-600" /> View Academic Profile
+                              </Link>
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuLabel className="text-[10px] uppercase font-black text-slate-400 p-3">Status Actions</DropdownMenuLabel>
@@ -399,6 +442,65 @@ export default function AdminStudentsPage() {
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Pagination Footer */}
+        <div className="px-6 py-4 border-t border-slate-50 flex flex-col sm:flex-row items-center justify-between gap-4 bg-slate-50/30">
+          <p className="text-xs font-bold text-slate-400 uppercase tracking-tighter">
+            Showing <span className="text-slate-900">{startIndex + 1}</span> to <span className="text-slate-900">{Math.min(startIndex + itemsPerPage, filtered.length)}</span> of <span className="text-slate-900">{filtered.length}</span> students
+          </p>
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="h-8 rounded-lg font-black text-[10px] uppercase tracking-widest px-4 border-slate-200"
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage(prev => prev - 1)}
+            >
+              Previous
+            </Button>
+            <div className="flex items-center gap-1">
+              {(() => {
+                const delta = 1;
+                const range = [];
+                for (let i = Math.max(2, currentPage - delta); i <= Math.min(totalPages - 1, currentPage + delta); i++) {
+                  range.push(i);
+                }
+
+                if (currentPage > 1 + delta + 1) range.unshift("...");
+                range.unshift(1);
+                if (currentPage < totalPages - delta - 1) range.push("...");
+                if (totalPages > 1) range.push(totalPages);
+
+                return range.map((p, i) => (
+                  <button
+                    key={i}
+                    disabled={p === "..."}
+                    onClick={() => typeof p === "number" && setCurrentPage(p)}
+                    className={cn(
+                      "h-8 min-w-[32px] px-2 rounded-lg text-[10px] font-black transition-all",
+                      currentPage === p 
+                        ? "bg-blue-600 text-white shadow-lg shadow-blue-200" 
+                        : p === "..."
+                          ? "bg-transparent text-slate-300 cursor-default"
+                          : "bg-white text-slate-400 hover:bg-slate-100 border border-slate-100"
+                    )}
+                  >
+                    {p}
+                  </button>
+                ));
+              })()}
+            </div>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="h-8 rounded-lg font-black text-[10px] uppercase tracking-widest px-4 border-slate-200"
+              disabled={currentPage === totalPages || totalPages === 0}
+              onClick={() => setCurrentPage(prev => prev + 1)}
+            >
+              Next
+            </Button>
+          </div>
         </div>
       </Card>
 

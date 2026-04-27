@@ -7,7 +7,7 @@ import {
   LayoutDashboard, GraduationCap, Users, BookOpen,
   Calendar, CalendarDays, Bell, Briefcase, UserCircle,
   Shield, ChevronLeft, ChevronRight, FileText, LogOut,
-  KeyRound, X, Plus, Sparkles,
+  KeyRound, X, Plus, Sparkles, Database, Calculator, BarChart2
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn, getInitials } from "@/lib/utils";
@@ -31,8 +31,14 @@ const adminNav: NavItem[] = [
   { label: "Notifications",    href: "/admin/notifications",    icon: <Bell className="h-5 w-5" /> },
 ];
 
+const profilingNav: NavItem[] = [
+  { label: "Institutional Analytics", href: "/admin/analytics", icon: <BarChart2 className="h-5 w-5" /> },
+  { label: "Records Database",  href: "/admin/records",          icon: <Database className="h-5 w-5" /> },
+];
+
 const facultyNav: NavItem[] = [
   { label: "Dashboard",     href: "/faculty",               icon: <LayoutDashboard className="h-5 w-5" /> },
+  { label: "Consolidated Grading", href: "/faculty/grading", icon: <Calculator className="h-5 w-5" /> },
   { label: "My Schedule",   href: "/faculty/schedule",      icon: <Calendar className="h-5 w-5" /> },
   { label: "My Classes",    href: "/faculty/classes",       icon: <BookOpen className="h-5 w-5" /> },
   { label: "Notifications", href: "/faculty/notifications", icon: <Bell className="h-5 w-5" />, badge: 3 },
@@ -40,6 +46,7 @@ const facultyNav: NavItem[] = [
 
 const studentNav: NavItem[] = [
   { label: "Dashboard",  href: "/student",            icon: <LayoutDashboard className="h-5 w-5" /> },
+  { label: "My Profile", href: "/student/profile",    icon: <UserCircle className="h-5 w-5" /> },
   { label: "Enrollment", href: "/student/enrollment", icon: <Plus className="h-5 w-5" /> },
   { label: "My Schedule",href: "/student/schedule",   icon: <Calendar className="h-5 w-5" /> },
   { label: "My Classes", href: "/student/classes",    icon: <BookOpen className="h-5 w-5" /> },
@@ -167,6 +174,48 @@ export function Sidebar({
               </Link>
             );
           })}
+
+          {/* Profiling Section (Admin only) */}
+          {role === 'admin' && (
+            <div className="mt-6 pt-4 border-t border-white/5 space-y-1">
+              {!collapsed && (
+                <p className="px-3 mb-2 text-[10px] font-semibold text-slate-500 uppercase tracking-widest">
+                  Profiling
+                </p>
+              )}
+              {profilingNav.map((item) => {
+                const active = isActive(item.href);
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={onMobileClose}
+                    title={collapsed ? item.label : undefined}
+                    className={cn(
+                      "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all group relative",
+                      active
+                        ? "bg-blue-600 text-white"
+                        : "text-slate-400 hover:bg-white/8 hover:text-white"
+                    )}
+                  >
+                    <span className="shrink-0">{item.icon}</span>
+
+                    {!collapsed && (
+                      <span className="text-sm font-medium leading-none whitespace-nowrap flex-1">
+                        {item.label}
+                      </span>
+                    )}
+
+                    {collapsed && (
+                      <div className="absolute left-full ml-3 px-2.5 py-1.5 bg-slate-800 text-white text-xs rounded-lg whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity z-50 shadow-lg border border-white/10">
+                        {item.label}
+                      </div>
+                    )}
+                  </Link>
+                );
+              })}
+            </div>
+          )}
         </nav>
 
         {/* User section */}
