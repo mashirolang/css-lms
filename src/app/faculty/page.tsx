@@ -67,6 +67,7 @@ export default function FacultyDashboard() {
         .from("subjects")
         .select(`
           *,
+          courses (code),
           schedule_slots (*),
           enrollments (count)
         `)
@@ -86,13 +87,13 @@ export default function FacultyDashboard() {
         (s.schedule_slots || [])
           .filter((slot: any) => slot.day_of_week === todayDay)
           .map((slot: any) => ({
-            id: s.id,
+            id: slot.id,
             code: s.code,
             name: s.name,
             time: slot.start_time.slice(0, 5),
             room: slot.room,
             students: s.enrollments?.[0]?.count || 0,
-            section: `${s.course_id}-${s.year_level}${s.section}`
+            section: `${s.courses?.code || 'N/A'}-${s.year_level}${s.section}`
           }))
       ).sort((a, b) => a.time.localeCompare(b.time));
 

@@ -101,7 +101,7 @@ export default function FacultyScheduleManager() {
         if (!formatted[day]) formatted[day] = {};
         const subject = slot.subjects;
         const course = Array.isArray(subject?.courses) ? subject.courses[0] : subject?.courses;
-        const courseName = course?.name || subject?.course_id || "Unknown";
+        const courseName = course?.code || "N/A";
 
         formatted[day][time] = {
           id: slot.id,
@@ -310,9 +310,9 @@ export default function FacultyScheduleManager() {
                 <SelectContent>
                   {courses.filter(c => c.faculty_id === facultyId).map(c => {
                     const course = Array.isArray(c.courses) ? c.courses[0] : c.courses;
-                    const courseName = course?.name || c.course_id || "Unknown";
+                    const courseCode = course?.code || "N/A";
                     return (
-                      <SelectItem key={c.id} value={c.id}>[{c.code}] {c.name} ({courseName}-{c.year_level}{c.section})</SelectItem>
+                      <SelectItem key={c.id} value={c.id}>[{c.code}] {c.name} ({courseCode}-{c.year_level}{c.section})</SelectItem>
                     );
                   })}
                 </SelectContent>

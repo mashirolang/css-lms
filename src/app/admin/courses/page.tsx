@@ -88,7 +88,7 @@ export default function CoursesPage() {
         code: s.code,
         units: s.units || 3,
         program: s.course_id,
-        programName: s.courses?.name || s.course_id || "N/A",
+        programName: s.courses?.name || "N/A",
         yearLevel: s.year_level,
         section: s.section,
         faculty_id: s.faculty_id,
