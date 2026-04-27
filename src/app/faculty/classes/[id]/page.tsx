@@ -103,7 +103,7 @@ export default function ClassDetailPage() {
         .from("subjects")
         .select(`
           *,
-          courses(name),
+          courses(name, code),
           schedule_slots(*)
         `)
         .eq("id", id)
@@ -117,12 +117,12 @@ export default function ClassDetailPage() {
         ? `${slots.map((sl: { day_of_week: number }) => days[sl.day_of_week]).join("/")} ${slots[0].start_time.slice(0,5)}–${slots[0].end_time.slice(0,5)}`
         : "TBA";
 
-      const courseName = subject.courses?.name || subject.course_id || "Unknown";
+      const courseCode = subject.courses?.code || "N/A";
       setClassInfo({
         id: subject.id,
         code: subject.code,
         name: subject.name,
-        section: `${courseName}-${subject.year_level}${subject.section}`,
+        section: `${courseCode}-${subject.year_level}${subject.section}`,
         schedule: schedStr,
         room: slots[0]?.room || "TBA",
       });

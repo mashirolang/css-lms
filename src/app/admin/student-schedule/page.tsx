@@ -72,7 +72,7 @@ export default function StudentSchedulePage() {
     try {
       const { data: sData, error: sErr } = await supabase
         .from("schedule_slots")
-        .select("*, subjects (*, courses(id, name))");
+        .select("*, subjects (*, courses(id, name, code))");
 
       if (sErr) throw sErr;
 
@@ -87,7 +87,7 @@ export default function StudentSchedulePage() {
         if (!formatted[day]) formatted[day] = {};
         const subject = slot.subjects;
         const course = Array.isArray(subject?.courses) ? subject.courses[0] : subject?.courses;
-        const courseName = course?.name || subject?.course_id || "Unknown";
+        const courseName = course?.code || "N/A";
 
         formatted[day][time] = {
           id: slot.id,
@@ -107,7 +107,7 @@ export default function StudentSchedulePage() {
       setScheduleData(formatted);
       setColorMap(colors);
 
-      const { data: cData } = await supabase.from("subjects").select("*, courses(id, name)");
+      const { data: cData } = await supabase.from("subjects").select("*, courses(id, name, code)");
       setCourses((cData as any[]) || []);
 
     } catch (err: unknown) {
@@ -178,7 +178,8 @@ export default function StudentSchedulePage() {
 
   const uniqueSections = Array.from(new Set(courses.map(c => {
     const course = Array.isArray(c.courses) ? c.courses[0] : c.courses;
-    return `${course?.name || c.course_id}-${c.year_level}${c.section}`;
+    const courseCode = course?.code || "N/A";
+    return `${courseCode}-${c.year_level}${c.section}`;
   }))).sort();
 
   return (
@@ -295,9 +296,9 @@ export default function StudentSchedulePage() {
                 <SelectContent>
                   {courses.map(c => {
                     const course = Array.isArray(c.courses) ? c.courses[0] : c.courses;
-                    const courseName = course?.name || c.course_id || "Unknown";
+                    const courseCode = course?.code || "N/A";
                     return (
-                      <SelectItem key={c.id} value={c.id}>[{c.code}] {c.name} ({courseName}-{c.year_level}{c.section})</SelectItem>
+                      <SelectItem key={c.id} value={c.id}>[{c.code}] {c.name} ({courseCode}-{c.year_level}{c.section})</SelectItem>
                     );
                   })}
                 </SelectContent>

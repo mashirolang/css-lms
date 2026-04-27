@@ -37,6 +37,7 @@ export default function FacultySchedulePage() {
         .from("subjects")
         .select(`
           *,
+          courses (code),
           schedule_slots (*)
         `)
         .eq("faculty_id", userId);
@@ -56,7 +57,7 @@ export default function FacultySchedulePage() {
           colorIdx++;
         }
 
-        const sectionStr = `${sub.course_id}-${sub.year_level}${sub.section}`;
+        const sectionStr = `${sub.courses?.code || 'N/A'}-${sub.year_level}${sub.section}`;
         uniqueSections.add(sectionStr);
 
         (sub.schedule_slots || []).forEach((slot: any) => {
