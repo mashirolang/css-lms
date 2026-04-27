@@ -57,7 +57,7 @@ export default function StudentClassDetailPage() {
         .from("subjects")
         .select(`
           *,
-          courses (name),
+          courses (name, code),
           faculty ( profiles (first_name, last_name) ),
           schedule_slots(*)
         `)
@@ -72,12 +72,12 @@ export default function StudentClassDetailPage() {
         ? `${slots.map((sl: any) => days[sl.day_of_week]).join("/")} ${slots[0].start_time.slice(0,5)}–${slots[0].end_time.slice(0,5)}`
         : "TBA";
 
-      const courseName = subject.courses?.name || subject.course_id || "Unknown";
+      const courseCode = subject.courses?.code || "N/A";
       setClassInfo({
         code: subject.code,
         name: subject.name,
         faculty: subject.faculty?.profiles ? `${subject.faculty.profiles.first_name} ${subject.faculty.profiles.last_name}` : "TBA",
-        section: `${courseName}-${subject.year_level}${subject.section}`,
+        section: `${courseCode}-${subject.year_level}${subject.section}`,
         schedule: schedStr,
         room: slots[0]?.room || "TBA",
       });
