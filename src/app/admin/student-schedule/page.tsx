@@ -53,7 +53,7 @@ interface CourseOption {
   course_id: string;
   year_level: number;
   section: string;
-  courses?: { name: string } | { name: string }[];
+  courses?: { name: string; code: string } | { name: string; code: string }[];
 }
 
 export default function StudentSchedulePage() {
